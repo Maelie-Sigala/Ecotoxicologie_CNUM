@@ -7,7 +7,3 @@ Carte de répartition des sites contaminés aux SDHI dans le bassin Adour-Garonn
 ## Remarques
 Les étudiants devront être relativement autonomes, et seront en échange avec l'Agence de l'Eau (base de données accessible) et éventuellement les fédérations de pêche en fonction de l'avancée du projet. Les documents produits (cartes et bases de données) seront utilisées dans le cadre du projet et présentés aux partenaires en, fin d'année, les étudiants seront conviés aux réunions de restitution si ils le souhaitent. 
 
-
-
-je cherche les ennuis
-
