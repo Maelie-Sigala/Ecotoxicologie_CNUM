@@ -1,10 +1,22 @@
+###############################################################################################
+###                              Agro Toulouse                                              ### 
+###                                 2A FISA                                                 ###
+###                      Projet UE Conception Numérique                                     ###
+###                               ----------                                                ###
+###                                  ----                                                   ###
+###                  R Script edited by Lorys David and Sigala Maélie                       ###
+###############################################################################################
+
+
+###   Projet : Analyse des données du SIE Adour Garonne sur les contaminations aux SDHI    ###
+
 ---
 editor_options: 
   markdown: 
     wrap: 72
 ---
 
-Charger toutes les librairies qui m'intéresse
+Charger toutes les librairies utiles 
 
 ```{r}
 library(dplyr)
@@ -38,6 +50,5 @@ SDHI %>%
 SDHI_filtre <- SDHI %>%
   filter(libparam %in% c("Aclonifène", "Boscalid", "Fluazinam", "Carboxine"))
 
-# bonjour
 
 ```
