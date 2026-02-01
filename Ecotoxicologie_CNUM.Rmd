@@ -38,6 +38,7 @@ Importation des données sur R
 data <- read.csv("phytos.csv", header=TRUE, stringsAsFactors = TRUE, sep = ';')
 View(data)
 ```
+On doit fusionner les fichiers cvs des années 2022 à 2025
 
 Traitement des données
 
