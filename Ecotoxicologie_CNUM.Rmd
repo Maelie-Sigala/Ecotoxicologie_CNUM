@@ -14,7 +14,15 @@
 editor_options: 
   markdown: 
     wrap: 72
+
+A quoi sert cette partie ? moi ça met erreur sur R 
 ---
+
+Nettoyer la mémoire de la console
+
+```{r}
+graphics.off()
+rm(list = ls())
 
 Charger toutes les librairies utiles 
 
