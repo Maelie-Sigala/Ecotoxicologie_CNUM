@@ -23,6 +23,7 @@ Nettoyer la mémoire de la console
 ```{r}
 graphics.off()
 rm(list = ls())
+```
 
 Charger toutes les librairies utiles 
 
