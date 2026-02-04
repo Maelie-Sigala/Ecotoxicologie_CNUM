@@ -1,21 +1,25 @@
-###############################################################################################
-###                              Agro Toulouse                                              ### 
-###                                 2A FISA                                                 ###
-###                      Projet UE Conception Numérique                                     ###
-###                               ----------                                                ###
-###                                  ----                                                   ###
-###                  R Script edited by Lorys David and Sigala Maélie                       ###
-###############################################################################################
+############################################################################################### 
 
+### Agro Toulouse
 
-###   Projet : Analyse des données du SIE Adour Garonne sur les contaminations aux SDHI    ###
+### 2A FISA
+
+### Projet UE Conception Numérique
+
+### ----------
+
+### ----
+
+### R Script edited by Lorys David and Sigala Maélie
+
+############################################################################################### 
+
+### Projet : Analyse des données du SIE Adour Garonne sur les contaminations aux SDHI
 
 ---
 editor_options: 
   markdown: 
     wrap: 72
-
-A quoi sert cette partie ? moi ça met erreur sur R 
 ---
 
 Nettoyer la mémoire de la console
@@ -25,7 +29,7 @@ graphics.off()
 rm(list = ls())
 ```
 
-Charger toutes les librairies utiles 
+Charger toutes les librairies utiles
 
 ```{r}
 library(dplyr)
@@ -35,30 +39,214 @@ library(dplyr)
 Importation des données sur R
 
 ```{r}
-data <- read.csv("phytos.csv", header=TRUE, stringsAsFactors = TRUE, sep = ';')
-View(data)
-```
-On doit fusionner les fichiers cvs des années 2022 à 2025
+# Données 2025
+p_2025 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2025/phytos2025.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+# View(p_2025)
+s_2025 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2025/stations2025.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+# View(s_2025)
 
-Traitement des données
+# Données 2024
+p_2024 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2024/phytos2024.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+s_2024 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2024/stations2024.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+
+# Données 2023
+p_2023 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2023/phytos2023.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+s_2023 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2023/stations2023.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+
+# Données 2022
+p_2022 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2022/phytos2022.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+s_2022 <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Données qualité 2022/stations2022.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+
+```
+
+Je vais d'abord joindre tout les excels en un
+
+ATTENTION FICHIER TRÈS LOURD CAR PAS TRIER, si on veut réduire le temps on trie les fichiers avant
 
 ```{r}
-# Donner le nom des colonnes
-colnames(data)
+# Conversion des types de données en "character"
+p_2025$station <- as.character(p_2025$station)
+s_2025$code <- as.character(s_2025$code)
 
-# Supprimer les colonnes inutiles
-SDHI <- data %>%
-  select(station, dateprel, libparam, in_situ, resultat)
-View(SDHI_filtre)
+p_2024$station <- as.character(p_2024$station)
+s_2024$code <- as.character(s_2024$code)
 
-# Connaître le nombre de station
-SDHI %>%
-  distinct(station) %>%
-  nrow()
+p_2023$station <- as.character(p_2023$station)
+s_2023$code <- as.character(s_2023$code)
 
-# Sélectionner seulement les molécules qui nous intéresses
-SDHI_filtre <- SDHI %>%
-  filter(libparam %in% c("Aclonifène", "Boscalid", "Fluazinam", "Carboxine"))
+p_2022$station <- as.character(p_2022$station)
+s_2022$code <- as.character(s_2022$code)
 
+# On vérifie que les 2 jeux sont en caractères
+class(p_2025)
+class(s_2025)
 
+class(p_2024)
+class(s_2024)
+
+class(p_2023)
+class(s_2023)
+
+class(p_2022)
+class(s_2022)
 ```
+
+On doit fusionner les fichiers cvs des années 2022 à 2025
+
+On commence par faire une jointure par année
+
+```{r}
+data_2025 <- p_2025 %>%
+  left_join(s_2025, by = c("station" = "code"))
+
+data_2024 <- p_2024 %>%
+  left_join(s_2024, by = c("station" = "code"))
+
+data_2023 <- p_2023 %>%
+  left_join(s_2023, by = c("station" = "code"))
+
+data_2022 <- p_2022 %>%
+  left_join(s_2022, by = c("station" = "code"))
+```
+
+On ajoute. une colonne année
+
+```{r}
+data_2025 <- data_2025 %>% 
+  mutate(annee = 2025)
+
+data_2024 <- data_2024 %>% 
+  mutate(annee = 2024)
+
+data_2023 <- data_2023 %>% 
+  mutate(annee = 2023)
+
+data_2022 <- data_2022 %>% 
+  mutate(annee = 2022)
+```
+
+On regroupe toutes les années en un seul tableau
+
+```{r}
+data_all <- bind_rows(
+  data_2022,
+  data_2023,
+  data_2024,
+  data_2025
+)
+
+# Faire une petite verif
+str(data_all)
+table(data_all$annee)
+head(data_all)
+
+write.csv(
+  data_all,
+  "/Users/lorysdavid/Desktop/CNUM/data_all.csv",
+  row.names = FALSE
+)
+```
+
+Je veux filtrer dans mon tableau les molécules que je selectionne
+
+Ça va être mon tableau avec les DONNÉES COMPLÈTES
+
+```{r}
+molecules <- c("Aclonifène", "Boscalid", "Fluazinam", "Carboxine")
+
+data_all_select <- data_all %>%
+  filter(libparam %in% molecules)
+
+# J'enregistre
+write.csv(
+  data_all_select,
+  "/Users/lorysdavid/Desktop/CNUM/Docs trier/data_all_select.csv",
+  row.names = FALSE
+)
+```
+
+Je sélectionne les colonnes qui m'interesse pour créer un autre excel en filtrant par station/molécule/année
+
+```{r}
+moyennes_station_mol_annee <- data_all_sel %>%
+  group_by(annee, station, libparam, libelle, x, y) %>%
+  summarise(
+    concentration_moyenne = mean(resultat, na.rm = TRUE),
+    n_mesures = n(),
+    .groups = "drop"
+  )
+View(moyennes_station_mol_annee)
+
+# Vérification rapide
+head(moyennes_station_mol_annee)
+table(moyennes_station_mol_annee$annee)
+
+# J'enregistre
+write.csv(
+  moyennes_station_mol_annee,
+  "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_mol_annee.csv",
+  row.names = FALSE
+)
+```
+
+Je fais maintenant une moyenne par molécules par stations de toute les années en même temps
+
+```{r}
+moyennes_station_molecule_all <- data_all_sel %>%
+  group_by(station, libparam, libelle, x, y) %>%
+  summarise(
+    concentration_moyenne = mean(resultat, na.rm = TRUE),
+    n_mesures = n(),
+    .groups = "drop"
+  )
+View(moyennes_station_molecule_all)
+
+# J'enregistre
+write.csv(
+  moyennes_station_molecule_all,
+  "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_molecule_all.csv",
+  row.names = FALSE
+)
+```
+
+Les données ont été traitées selon deux niveaux : un jeu de données conservant l’ensemble des informations de prélèvement (dates, stations, molécules) et un jeu de données agrégé, issu du calcul de moyennes pluriannuelles par station et par molécule. Cette approche permet à la fois une analyse détaillée et une représentation cartographique synthétique des niveaux de contamination.
