@@ -1,0 +1,140 @@
+---
+title: "gobiogobio"
+output: pdf_document
+date: "2026-02-03"
+---
+
+## Agro Toulouse
+
+## 2A FISA
+
+## Projet UE Conception Numérique
+
+### Traitement des données Naïades sur les goujons
+
+### -------------------------
+
+### R Script edited by Lorys David and Sigala Maélie
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Mise à jour de la console :
+
+```{r}
+graphics.off()
+rm(list = ls())
+```
+
+Chargement des librairies
+
+```{r}
+library(dplyr)
+library(readr)
+library(lubridate)
+```
+
+Importation des données Naïades format csv sur R :
+
+Nous avons un dossier zip constitué de 5 fichiers Excel: - Conditions environnementales - Listes Faune/Flore - Opérations - Résultats biologiques - Stations
+
+Ceux qui nous intéresse pour le moment sont ceux qui répertorient le nombre de goujons par prélèvement (listes Faune/flore) et les données géographiques des stations (Stations) pour réaliser une cartographie.
+
+```{r}
+goujons <- read.csv("C:/Users/maeli/Desktop/naiades_goujons/ListesFauneFlore.csv", 
+                    header=TRUE, 
+                    stringsAsFactors = TRUE, 
+                    sep = ';')
+View(goujons)
+
+stations <- read.csv(
+  "C:/Users/maeli/Desktop/naiades_goujons/Stations.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";")
+
+View(stations)
+```
+
+Nous allons garder seulement les colonnes utiles pour notre analyse, cad le nombre de goujons/prélèvement/stations et les coordonnées géographiques des stations.
+
+```{r}
+# Donner le nom des colonnes
+colnames(goujons)
+colnames(stations)
+
+# Garder seulement les colonnes utiles des 2 fichiers
+goujons1 <- goujons %>%
+  select(LbStationMesureEauxSurface, DateDebutOperationPrelBio, RsTaxRep)
+View(goujons1)
+
+stations1 <- stations %>% 
+  select(LbStationMesureEauxSurface, CoordXStationMesureEauxSurface, CoordYStationMesureEauxSurface)
+View(stations1)
+```
+
+### Regrouper tous les prélèvements par station et par an:
+
+Combien y'a t'il de stations de prélèvement de goujons dans le bassin Adour Garonne ?
+
+```{r}
+stations %>%
+  distinct(LbStationMesureEauxSurface) %>%
+  nrow()
+```
+
+Combien de prélèvement ont été réalisé de chaque année sur chaque station ?
+
+```{r}
+# Conversion de la date + extraction de l'année
+goujons <- goujons %>%
+  mutate(DateDebutOperationPrelBio = as.Date(DateDebutOperationPrelBio),
+         Annee = year(DateDebutOperationPrelBio))
+
+# Comptage par année et par station
+prelevements_station_annee <- goujons %>%
+  group_by(LbStationMesureEauxSurface, Annee) %>%
+  summarise(
+    NbPrelevements = n(),
+    .groups = "drop"
+  )
+
+# Affichage
+View(prelevements_station_annee)
+```
+
+Combien de prélèvements par stations sur les 4 dernières années ?
+
+```{r}
+
+# Définition des 4 dernières années présentes dans le fichier
+dernieres_annees <- sort(unique(goujons$Annee), decreasing = TRUE)[1:4]
+
+# Filtrage sur ces années
+goujons_filtrees <- goujons %>%
+  filter(Annee %in% dernieres_annees)
+
+# Comptage par station
+prelevements_par_station <- goujons_filtrees %>%
+  group_by(LbStationMesureEauxSurface) %>%
+  summarise(
+    NbPrelevements = n(),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(NbPrelevements))
+
+# Affichage
+View(prelevements_par_station)
+```
+
+## Transformer les données pour QGIS
+
+```{r}
+# Fusion des deux jeux de données
+donnees_qgis <- goujons1 %>%
+  left_join(stations1, by = "LbStationMesureEauxSurface")
+```
+
+
+\`\`\`
