@@ -32,68 +32,112 @@ Chargement des librairies
 ```{r}
 library(dplyr)
 library(readr)
+library(tidyr)
 library(lubridate)
+library(ggplot2)
 ```
 
-Importation des données Naïades format csv sur R :
+## Importation des données Naïades format csv sur R
 
-Nous avons un dossier zip constitué de 5 fichiers Excel: - Conditions environnementales - Listes Faune/Flore - Opérations - Résultats biologiques - Stations
+Nous avons un dossier zip constitué de 5 fichiers Excel:
 
-Ceux qui nous intéresse pour le moment sont ceux qui répertorient le nombre de goujons par prélèvement (listes Faune/flore) et les données géographiques des stations (Stations) pour réaliser une cartographie.
+-   Conditions environnementales
+-   Listes Faune/Flore
+-   Opérations
+-   Résultats biologiques
+-   Stations
+
+Les fichiers qui nous intéressent sont ceux qui répertorient le nombre de poissons par prélèvement (listes Faune/flore) et les données géographiques des stations (Stations) pour réaliser une cartographie.
 
 ```{r}
-goujons <- read.csv("C:/Users/maeli/Desktop/naiades_goujons/ListesFauneFlore.csv", 
+# Importer les données recensement IPR sur les mêmes périodes
+ipr <- read.csv("C:/Users/maeli/Desktop/naiades_ipr/ListesFauneFlore.csv", 
                     header=TRUE, 
                     stringsAsFactors = TRUE, 
                     sep = ';')
-View(goujons)
+View(ipr)
 
-stations <- read.csv(
-  "C:/Users/maeli/Desktop/naiades_goujons/Stations.csv",
-  header = TRUE,
-  stringsAsFactors = TRUE,
-  sep = ";")
+# Regroupons les goujons recensés par date de pêche 
 
-View(stations)
+# Regroupons les espèces de goujons ensemble 
+taxons_gobio <- c("Gobio", "Gobio gobio", "Gobio occitanae", "Gobio lozanoi")
+
+gobio <- ipr[ipr$NomLatinAppelTaxon %in% taxons_gobio, ]
+View(gobio)
+
+# Regrouper par date et compter les occurrences
+resultat <- aggregate(gobio$NomLatinAppelTaxon,
+                      by = list(Date = gobio$DateDebutOperationPrelBio),
+                      FUN = length)
+
+names(resultat)[2] <- "Nombre de goujons"
+View(resultat)
 ```
 
-Nous allons garder seulement les colonnes utiles pour notre analyse, cad le nombre de goujons/prélèvement/stations et les coordonnées géographiques des stations.
+Combien y'a t'il de goujons prélevés sur 2022 et 2025 toutes stations confondues ?
 
 ```{r}
-# Donner le nom des colonnes
-colnames(goujons)
-colnames(stations)
-
-# Garder seulement les colonnes utiles des 2 fichiers
-goujons1 <- goujons %>%
-  select(LbStationMesureEauxSurface, DateDebutOperationPrelBio, RsTaxRep)
-View(goujons1)
-
-stations1 <- stations %>% 
-  select(LbStationMesureEauxSurface, CoordXStationMesureEauxSurface, CoordYStationMesureEauxSurface)
-View(stations1)
+total_gobio = sum(resultat$`Nombre de goujons`, na.rm = TRUE)
+total_gobio
 ```
 
-### Regrouper tous les prélèvements par station et par an:
-
-Combien y'a t'il de stations de prélèvement de goujons dans le bassin Adour Garonne ?
+Réalisons un tableau d'abondance en moyenne par mois sur chaque année :
 
 ```{r}
-stations %>%
+# Regroupement par mois et année
+gobio_mensuel <- gobio %>%
+  mutate(
+    Annee = year(DateDebutOperationPrelBio),
+    Mois = month(DateDebutOperationPrelBio, label = TRUE, abbr = FALSE)
+  ) %>%
+  group_by(Annee, Mois) %>%
+  summarise(Nombre_prelevements = n()) %>%
+  arrange(Annee, Mois)
+
+gobio_mensuel
+```
+
+Regroupons par mois (toutes années confondues) pour analyser s'il y a des tendances saisonnières de présence des goujons :
+
+```{r}
+# Vecteur des mois en français pour l'ordre
+mois_fr <- c("janvier", "février", "mars", "avril", "mai", "juin",
+             "juillet", "août", "septembre", "octobre", "novembre", "décembre")
+
+gobio_mensuel_global <- gobio %>%
+  mutate(
+    # Conversion explicite en date
+    DateDebutOperationPrelBio = as.Date(DateDebutOperationPrelBio),
+
+    # Extraction du mois
+    Mois = month(DateDebutOperationPrelBio, label = TRUE, abbr = FALSE)
+  ) %>%
+  group_by(Mois) %>%
+  summarise(Nombre_prelevements = n()) %>%
+  arrange(match(Mois, mois_fr))
+View(gobio_mensuel_global)
+```
+
+Nous pouvons en déduire que les périodes de recensemment se réalise de mai à octobre et qu'il y a une plus forte présence de goujons au mois de septembre (effet post-reproduction)
+
+Combien de y'a t'il de stations de pêche pour le recensement ?
+
+```{r}
+ipr %>%
   distinct(LbStationMesureEauxSurface) %>%
   nrow()
 ```
 
-Combien de prélèvement ont été réalisé de chaque année sur chaque station ?
+Combien de prélèvements par an et par stations ?
 
 ```{r}
 # Conversion de la date + extraction de l'année
-goujons <- goujons %>%
+ipr <- ipr %>%
   mutate(DateDebutOperationPrelBio = as.Date(DateDebutOperationPrelBio),
          Annee = year(DateDebutOperationPrelBio))
 
 # Comptage par année et par station
-prelevements_station_annee <- goujons %>%
+prelevements_station_annee <- ipr %>%
   group_by(LbStationMesureEauxSurface, Annee) %>%
   summarise(
     NbPrelevements = n(),
@@ -104,37 +148,81 @@ prelevements_station_annee <- goujons %>%
 View(prelevements_station_annee)
 ```
 
-Combien de prélèvements par stations sur les 4 dernières années ?
+Moyenne de nb de prélèvements par an et par station :
 
 ```{r}
-
-# Définition des 4 dernières années présentes dans le fichier
-dernieres_annees <- sort(unique(goujons$Annee), decreasing = TRUE)[1:4]
-
-# Filtrage sur ces années
-goujons_filtrees <- goujons %>%
-  filter(Annee %in% dernieres_annees)
-
-# Comptage par station
-prelevements_par_station <- goujons_filtrees %>%
+# Calcul du nombre de prélèvements par station et par année
+gobio_moyenne_station_annee <- ipr %>%
+  mutate(Annee = year(DateDebutOperationPrelBio)) %>%
+  group_by(LbStationMesureEauxSurface, Annee) %>%
+  summarise(Nombre_prelevements = n()) %>%
+  ungroup() %>%
   group_by(LbStationMesureEauxSurface) %>%
-  summarise(
-    NbPrelevements = n(),
-    .groups = "drop"
-  ) %>%
-  arrange(desc(NbPrelevements))
+  summarise(Moyenne_prelevements_par_an = mean(Nombre_prelevements)) %>%
+  arrange(desc(Moyenne_prelevements_par_an))
 
-# Affichage
-View(prelevements_par_station)
+gobio_moyenne_station_annee
 ```
 
-## Transformer les données pour QGIS
+Nous pouvons observer un déséquilibre d'opération de prélèvements/an sur les différentes stations. max= 33; min=1
+
+## Vérifier les absences de resencement de goujons par date d'opération de prélèvement ipr par stations :
 
 ```{r}
-# Fusion des deux jeux de données
-donnees_qgis <- goujons1 %>%
-  left_join(stations1, by = "LbStationMesureEauxSurface")
+# 1. Toutes les combinaisons Date × Station
+dates_stations <- ipr %>%
+  distinct(DateDebutOperationPrelBio, LbStationMesureEauxSurface)
+
+# 2. Comptage des Gobio par date × station
+gobio_counts <- ipr %>%
+  filter(NomLatinAppelTaxon %in% taxons_gobio) %>%
+  group_by(DateDebutOperationPrelBio, LbStationMesureEauxSurface) %>%
+  summarise(
+    nb_gobio = sum(RsTaxRep, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 3. Jointure + complétion des absences
+gobio_absences <- dates_stations %>%
+  left_join(gobio_counts,
+            by = c("DateDebutOperationPrelBio", "LbStationMesureEauxSurface")) %>%
+  mutate(
+    nb_gobio = replace_na(nb_gobio, 0),
+    gobio_present = nb_gobio > 0,
+    gobio_absent = !gobio_present
+  )
+# 4. Ajout des coordonnées géographiques des stations 
+cdstations <- read.csv("C:/Users/maeli/Desktop/naiades_ipr/Stations.csv", 
+                    header=TRUE, 
+                    stringsAsFactors = TRUE, 
+                    sep = ';')
+View(cdstations)
+
+cdstationsXY <- cdstations %>%
+  select(LbStationMesureEauxSurface, CoordXStationMesureEauxSurface, CoordYStationMesureEauxSurface)
+
+gobio_absences_geo <- gobio_absences %>%
+  left_join(cdstationsXY, by = "LbStationMesureEauxSurface")
+
+View(gobio_absences_geo)
 ```
 
+## Pour exporter le fichier en csv :
+
+```{r}
+# Rendre le tableau plus propre en enlevant les colonnes absence/présence (remplacer par des valeurs numériques)
+
+gobio <- gobio_absences_geo %>%
+  select(-gobio_absent, -gobio_present)
+
+View(gobio)
+
+# Export CSV
+write.csv(
+  gobio,
+  "C:/Users/maeli/Desktop/naiades_ipr/gobio.csv",
+  row.names = FALSE
+)
+```
 
 \`\`\`
