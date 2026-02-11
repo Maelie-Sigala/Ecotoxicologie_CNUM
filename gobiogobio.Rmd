@@ -35,6 +35,8 @@ library(readr)
 library(tidyr)
 library(lubridate)
 library(ggplot2)
+library(stringr)
+
 ```
 
 ## Importation des données Naïades format csv sur R
@@ -47,7 +49,8 @@ Nous avons un dossier zip constitué de 5 fichiers Excel:
 -   Résultats biologiques
 -   Stations
 
-Les fichiers qui nous intéressent sont ceux qui répertorient le nombre de poissons par prélèvement (listes Faune/flore) et les données géographiques des stations (Stations) pour réaliser une cartographie.
+Les fichiers qui nous intéressent sont ceux qui répertorient le nombre de poissons par prélèvement (listes Faune/flore) et les données géographiques, les informations des stations (Stations) pour réaliser une cartographie. 
+Le fichier "Opérations" nous sera également utile pour obtenir les organismes qui ont organisé les recensements, ainsi que le nom des organismes préleveurs.
 
 ```{r}
 # Importer les données recensement IPR sur les mêmes périodes
@@ -198,31 +201,90 @@ cdstations <- read.csv("C:/Users/maeli/Desktop/naiades_ipr/Stations.csv",
                     sep = ';')
 View(cdstations)
 
-cdstationsXY <- cdstations %>%
-  select(LbStationMesureEauxSurface, CoordXStationMesureEauxSurface, CoordYStationMesureEauxSurface)
-
+# Jointure station x nb de gobio par date de prélèvement 
 gobio_absences_geo <- gobio_absences %>%
-  left_join(cdstationsXY, by = "LbStationMesureEauxSurface")
+  left_join(cdstations, by = "LbStationMesureEauxSurface")
 
-View(gobio_absences_geo)
-```
-
-## Pour exporter le fichier en csv :
-
-```{r}
 # Rendre le tableau plus propre en enlevant les colonnes absence/présence (remplacer par des valeurs numériques)
-
 gobio <- gobio_absences_geo %>%
   select(-gobio_absent, -gobio_present)
 
 View(gobio)
+# Sauvegarder le fichier CSV
+write.csv(gobio, "C:/Users/maeli/Desktop/CNUM/gobio.csv", row.names = FALSE)
 
-# Export CSV
-write.csv(
-  gobio,
-  "C:/Users/maeli/Desktop/naiades_ipr/gobio.csv",
-  row.names = FALSE
+```
+
+## Rajouter les infos de la station pour l'atlas provenant des autres fichiers du dossiers Naiades (Opérations)et regrouper par station en prennant en compte toutes les dates de prélèvement dans un format colonne historique.
+
+Par soucis d'exploitation des données, nous reprenons directement le script avec le fichier au format csv.
+
+```{r}
+# Importer les données
+gobio <- read.csv(
+  "C:/Users/maeli/Desktop/CNUM/gobio.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ","
 )
+View(gobio)
+
+# concat valeurs uniques (non-NA) séparées par " | "
+concat_unique_bar <- function(x) {
+  x <- x[!is.na(x)]
+  x <- unique(as.character(x))
+  paste(x, collapse = " | ")
+}
+
+# colonnes descriptives (tout sauf station/date/nb_gobio)
+other_cols <- setdiff(
+  names(gobio),
+  c("CdStationMesureEauxSurface", "DateDebutOperationPrelBio", "nb_gobio")
+)
+
+gobio_station <- gobio %>%
+  mutate(
+    DateDebutOperationPrelBio = as.character(DateDebutOperationPrelBio),
+    nb_gobio_num = suppressWarnings(as.numeric(nb_gobio))
+  ) %>%
+  group_by(CdStationMesureEauxSurface) %>%
+  summarise(
+    across(all_of(other_cols), concat_unique_bar),
+
+    nb_prelevements = n(),
+    total_gobio     = sum(nb_gobio_num, na.rm = TRUE),
+
+    # historique des dates
+    historique_dates = paste(
+      DateDebutOperationPrelBio[order(DateDebutOperationPrelBio)],
+      collapse = " | "
+    ),
+
+    # uniquement les nombres dans l'ordre des dates
+    gobio_par_prelevement = paste(
+      nb_gobio_num[order(DateDebutOperationPrelBio)],
+      collapse = " | "
+    ),
+
+    .groups = "drop"
+  )
+
+# On réorganisation les colonnes les plus interessantes au début
+gobio_station <- gobio_station %>%
+  relocate(
+    CdStationMesureEauxSurface,
+    LbStationMesureEauxSurface,
+    CoordXStationMesureEauxSurface,
+    CoordYStationMesureEauxSurface,
+    nb_prelevements,
+    total_gobio,
+    historique_dates,
+    gobio_par_prelevement
+  )
+
+View(gobio_station)
+
+write.csv(gobio_station, "C:/Users/maeli/Desktop/CNUM/gobio.csv", row.names = FALSE)
 ```
 
 \`\`\`
