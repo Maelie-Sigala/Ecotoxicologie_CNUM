@@ -1,118 +1,235 @@
 <!DOCTYPE html>
+
 <html lang="fr">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Projet ECOTOX - CNUM ENSAT</title>
+
     <style>
+
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1300px; margin: auto; padding: 20px; background-color: #f4f7f6; }
+
         header { background: #2c3e50; color: white; padding: 2.5rem; text-align: center; border-radius: 8px; margin-bottom: 2rem; }
+
         h1 { margin: 0; font-size: 2.2rem; }
+
         h2 { color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 8px; margin-top: 2.5rem; }
+
         .container { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
         .info-box { background: #e8f4f8; border-left: 5px solid #2980b9; padding: 20px; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+
         .project-img { width: 100%; max-width: 750px; height: auto; border: 1px solid #ddd; border-radius: 10px; display: block; margin: 25px auto; }
+
         
+
         /* Estilo responsivo para el iframe */
+
         .map-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 20px 0; }
+
         .map-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
+
+
         .caption { text-align: center; font-size: 0.95rem; color: #555; font-style: italic; margin-bottom: 25px; }
+
         ul { padding-left: 25px; }
+
         li { margin-bottom: 12px; }
+
         footer { text-align: center; margin-top: 4rem; padding: 2rem; color: #666; border-top: 1px solid #eee; }
+
         .btn-github { display: inline-block; background: #2c3e50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: all 0.3s ease; }
+
         .btn-github:hover { background: #34495e; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
     </style>
+
 </head>
+
 <body>
 
+
+
 <header>
-    <h1>Analyse d'Écotoxicité : Mitotoxiques, goujons et occupation des sols</h1>
-    <p>Unité d'Enseignement : Conception Numérique (CNUM) | 2025-2026</p>
-    <p>Auteurs : Lorys DAVID, Maélie SIGALA, Ramiro Gaston ORTEGA</p>
+
+    <h1>Analyse d'Ã‰cotoxicitÃ© : Mitotoxiques, goujons et occupation des sols</h1>
+
+    <p>UnitÃ© d'Enseignement : Conception NumÃ©rique (CNUM) | 2025-2026</p>
+
+    <p>Auteurs : Lorys DAVID, MaÃ©lie SIGALA, Ramiro Gaston ORTEGA</p>
+
 </header>
 
+
+
 <div class="container">
-    <section>
-        <h2>1. Contexte et Problématique Scientifique</h2>
-        <p>Ce projet répond à la demande de <strong>Mme Lisa Jacquin (INRAE)</strong> pour l'équipe d'écotoxicologie. L'objectif est d'étudier l'impact des fongicides SDHI et d'autres molécules mitotoxiques (Fluazinam) issus des pratiques agricoles sur la faune aquatique du <strong>Bassin Adour-Garonne</strong>. L'étude s'appuie sur des prélèvements réalisés entre <strong>2022 et 2025</strong>. Les espèces indicatrices retenues sont les goujons : <em>Gobio gobio, Gobio lozanoi et Gobio occitaneae</em>.</p>
-        
-        <p>L'analyse se concentre sur quatre molécules clés : l'<strong>Aclonifène, le Boscalid, la Carboxine</strong> et le <strong>Fluazinam</strong>, sélectionnées pour leur capacité à inhiber la respiration cellulaire. Ces substances présentent un risque environnemental majeur dû à la conservation de l'enzyme cible (SDH) chez de nombreuses espèces. Le projet explore également le lien entre l'occupation des sols et la contamination des habitats naturels des goujons.</p>
-    </section>
 
     <section>
+
+        <h2>1. Contexte et ProblÃ©matique Scientifique</h2>
+
+        <p>Ce projet rÃ©pond Ã  la demande de <strong>Mme Lisa Jacquin </strong> pour l'Ã©quipe d'Ã©cotoxicologie. L'objectif est d'Ã©tudier l'impact des fongicides SDHI et d'autres molÃ©cules mitotoxiques (Fluazinam) issus des pratiques agricoles sur la faune aquatique du <strong>Bassin Adour-Garonne</strong>. L'Ã©tude s'appuie sur des prÃ©lÃ¨vements rÃ©alisÃ©s entre <strong>2022 et 2025</strong>. Les espÃ¨ces indicatrices retenues sont les goujons : <em>Gobio gobio, Gobio lozanoi et Gobio occitaneae</em>.</p>
+
+        
+
+        <p>L'analyse se concentre sur quatre molÃ©cules clÃ©s : l'<strong>AclonifÃ¨ne, le Boscalid, la Carboxine</strong> et le <strong>Fluazinam</strong>, sÃ©lectionnÃ©es pour leur capacitÃ© Ã  inhiber la respiration cellulaire. Ces substances prÃ©sentent un risque environnemental majeur dÃ» Ã  la conservation de l'enzyme cible (SDH) chez de nombreuses espÃ¨ces. Le projet explore Ã©galement le lien entre l'occupation des sols et la contamination des habitats naturels des goujons.</p>
+
+    </section>
+
+
+
+    <section>
+
         <h2>2. Objectifs du Produit Final</h2>
+
         <ul>
-            <li><strong>Automatisation :</strong> Extraction et traitement standardisé des données sur une période de 4 ans via RStudio.</li>
-            <li><strong>Analyse de Persistance :</strong> Évaluation de la fréquence de détection des molécules dans le bassin versant.</li>
-            <li><strong>Visualisation Croisée :</strong> Corrélation spatiale entre contamination chimique, occupation agricole et biodiversité aquatique.</li>
+
+            <li><strong>Automatisation :</strong> Extraction et traitement standardisÃ© des donnÃ©es sur une pÃ©riode de 4 ans via RStudio.</li>
+
+            <li><strong>Analyse de Persistance :</strong> Ã‰valuation de la frÃ©quence de dÃ©tection des molÃ©cules dans le bassin versant.</li>
+
+            <li><strong>Visualisation CroisÃ©e :</strong> CorrÃ©lation spatiale entre contamination chimique, occupation agricole et biodiversitÃ© aquatique.</li>
+
         </ul>
+
     </section>
 
+
+
     <section>
+
         <h2>3. Cahier des Charges</h2>
-        <p>Le livrable comprend une méthodologie d'extraction, une documentation technique et une série de cartographies thématiques permettant d'analyser les pressions agricoles.</p>
-        <img src="img/PBS.png" alt="Organigramme des tâches PBS" class="project-img">
-        <p class="caption">Figure 1 : Organigramme des tâches (Product Breakdown Structure).</p>
+
+        <p>Le livrable comprend une mÃ©thodologie d'extraction, une documentation technique et une sÃ©rie de cartographies thÃ©matiques permettant d'analyser les pressions agricoles.</p>
+
+        <img src="img/PBS.png" alt="Organigramme des tÃ¢ches PBS" class="project-img">
+
+        <p class="caption">Figure 1 : Organigramme des tÃ¢ches (Product Breakdown Structure).</p>
+
     </section>
 
+
+
     <section>
+
         <h2>4. Matrice de Risques</h2>
-        <p>Afin d'assurer la viabilité du projet, les risques liés à l'accès aux données et aux contraintes techniques ont été identifiés et évalués.</p>
+
+        <p>Afin d'assurer la viabilitÃ© du projet, les risques liÃ©s Ã  l'accÃ¨s aux donnÃ©es et aux contraintes techniques ont Ã©tÃ© identifiÃ©s et Ã©valuÃ©s.</p>
+
         <img src="img/tableau_de_risques.png" alt="Tableau d'analyse des risques" class="project-img">
+
         <p class="caption">Figure 2 : Tableau d'analyse et de gestion des risques du projet.</p>
+
     </section>
 
+
+
     <section>
-        <h2>5. Aperçu de la Production</h2>
-        <p>La carte interactive ci-dessous permet d'explorer les données de prélèvements (molécules et populations de goujons) ainsi que les couches d'occupation des sols pour le bassin Adour-Garonne.</p>
+
+        <h2>5. AperÃ§u de la Production</h2>
+
+        <p>La carte interactive ci-dessous permet d'explorer les donnÃ©es de prÃ©lÃ¨vements (molÃ©cules et populations de goujons) ainsi que les couches d'occupation des sols pour le bassin Adour-Garonne.</p>
+
         <div class="map-container">
+
             <iframe class="map-iframe" src="https://cnum.toile-libre.org/2026/Ecotoxicologie/img/index.html#6/47.211/8.202"></iframe>
+
         </div>
+
         <p class="caption">Figure 3 : Cartographie spatiale interactive croisant contamination, usage des sols et populations de <em>Gobio</em> spp.</p>
+
     </section>
+
 <section/>
+
 <a href="https://cnum.toile-libre.org/2026/Ecotoxicologie/img/index.html#6/47.211/8.202" target="_blank">Lien vers la carte en plein  cran</a></body>
+
 <section/>
+
+
+
 
 
     <section>
+
         <h2>6. Conclusion</h2>
-        <p>Ce travail fournit un protocole reproductible permettant d'évaluer la pression chimique des mitotoxiques. Les outils développés facilitent la compréhension des zones de vulnérabilité écologique pour la commanditaire.</p>
+
+        <p>Ce travail fournit un protocole reproductible permettant d'Ã©valuer la pression chimique des mitotoxiques. Les outils dÃ©veloppÃ©s facilitent la comprÃ©hension des zones de vulnÃ©rabilitÃ© Ã©cologique pour la commanditaire.</p>
+
         
+
         <div class="info-box">
-            <strong>Ressources mobilisées :</strong>
+
+            <strong>Ressources mobilisÃ©es :</strong>
+
             <ul>
-                <li><strong>Expertise :</strong> Mme Lisa Jacquin (INRAE), M. Marc Lang (ENSAT), M. Christophe Laplanche (ENSAT).</li>
-                <li><strong>Données :</strong> SIE Adour-Garonne, Portail Naïades, ANSES.</li>
-                <li><strong>Logiciels :</strong> RStudio, QGIS, GitHub, et ChatGPT pour le support au débogage.</li>
+
+                <li><strong>Expertise :</strong> Mme Lisa Jacquin, M. Marc Lang (ENSAT), M. Christophe Laplanche (ENSAT).</li>
+
+                <li><strong>DonnÃ©es :</strong> SIE Adour-Garonne, Portail NaÃ¯ades, ANSES.</li>
+
+                <li><strong>Logiciels :</strong> RStudio, QGIS, GitHub, et ChatGPT pour le support au dÃ©bogage.</li>
+
             </ul>
+
         </div>
+
     </section>
+
 <section>
+
         <h2>7. Bibliographie</h2>
+
         <ul style="list-style-type: none; padding-left: 0;">
-            <li><strong>ANSES. (2019).</strong> <em>Avis de l'Anses relatif à l'examen de l'alerte sur les risques liés à l'utilisation des fongicides inhibiteurs de la succinate déshydrogénase (SDHI)</em>. Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail.</li>
+
+            <li><strong>ANSES. (2019).</strong> <em>Avis de l'Anses relatif Ã  l'examen de l'alerte sur les risques liÃ©s Ã  l'utilisation des fongicides inhibiteurs de la succinate dÃ©shydrogÃ©nase (SDHI)</em>. Agence nationale de sÃ©curitÃ© sanitaire de l'alimentation, de l'environnement et du travail.</li>
+
             
-            <li><strong>Minist re de la Transition écologique. (2025).</strong> <em>Données sur les substances chimiques dans les eaux de surface : Portail Naïades</em>. Récupéré sur <a href="http://www.naiades.eaufrance.fr/" target="_blank">http://www.naiades.eaufrance.fr/</a></li>
+
+            <li><strong>Minist re de la Transition Ã©cologique. (2025).</strong> <em>DonnÃ©es sur les substances chimiques dans les eaux de surface : Portail NaÃ¯ades</em>. RÃ©cupÃ©rÃ© sur <a href="http://www.naiades.eaufrance.fr/" target="_blank">http://www.naiades.eaufrance.fr/</a></li>
+
             
-            <li><strong>SIE Adour-Garonne. (2025).</strong> <em>Systéme d'Information sur l'Eau du Bassin Adour-Garonne : Données de surveillance des eaux superficielles</em>. Récupéré sur <a href="https://www.adour-garonne.eaufrance.fr/" target="_blank">https://www.adour-garonne.eaufrance.fr/</a></li>
+
+            <li><strong>SIE Adour-Garonne. (2025).</strong> <em>SystÃ©me d'Information sur l'Eau du Bassin Adour-Garonne : DonnÃ©es de surveillance des eaux superficielles</em>. RÃ©cupÃ©rÃ© sur <a href="https://www.adour-garonne.eaufrance.fr/" target="_blank">https://www.adour-garonne.eaufrance.fr/</a></li>
+
         </ul>
+
     </section> <p/>
 
+
+
     <section style="text-align: center; background: #f8f9fa; padding: 2rem; border-radius: 8px; margin-top: 2rem;">
-        <h2>Développement Collaboratif</h2>
-        <p>Le code source, les scripts de traitement et l'historique du projet sont accessibles sur notre dépôt :</p>
-        <a href="https://github.com/Maelie-Sigala/Ecotoxicologie_CNUM" class="btn-github" target="_blank" rel="noopener noreferrer">Accéder au dépôt GitHub</a>
+
+        <h2>DÃ©veloppement Collaboratif</h2>
+
+        <p>Le code source, les scripts de traitement et l'historique du projet sont accessibles sur notre dÃ©pÃ´t :</p>
+
+        <a href="https://github.com/Maelie-Sigala/Ecotoxicologie_CNUM" class="btn-github" target="_blank" rel="noopener noreferrer">AccÃ©der au dÃ©pÃ´t GitHub</a>
+
     </section>
+
 </div>
 
+
+
 <footer>
+
     <p><strong>Projet CNUM 2025-2026 - ENSAT</strong></p>
-    <p>Équipe : Maélie SIGALA, Lorys DAVID et Ramiro Gaston ORTEGA</p>
+
+    <p>Ã‰quipe : MaÃ©lie SIGALA, Lorys DAVID et Ramiro Gaston ORTEGA</p>
+
     <p>Responsable de l'UE : Christophe Laplanche</p>
+
 </footer>
 
+
+
 </body>
+
 </html>
