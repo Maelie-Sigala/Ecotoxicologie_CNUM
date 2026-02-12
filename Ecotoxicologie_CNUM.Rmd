@@ -8,11 +8,7 @@
 
 ### ----------
 
-### ----
-
-### R Script edited by Lorys David and Sigala Maélie
-
-############################################################################################### 
+### R Script edited by Lorys David, Sigala Maélie et Gaston Ortega
 
 ### Projet : Analyse des données du SIE Adour Garonne sur les contaminations aux SDHI
 
@@ -33,7 +29,7 @@ Charger toutes les librairies utiles
 
 ```{r}
 library(dplyr)
-
+library(tidyr)
 ```
 
 Importation des données sur R
@@ -99,12 +95,30 @@ s_2022 <- read.csv(
 
 ```
 
-Je vais d'abord joindre tout les excels en un
-
-ATTENTION FICHIER TRÈS LOURD CAR PAS TRIER, si on veut réduire le temps on trie les fichiers avant
+On veut connaitre le nombre de station de détection totale par années
+(toute molécules confondues
 
 ```{r}
-# Conversion des types de données en "character"
+# Pour savoir combien il y a de station par an (toute molécules confondues)
+res_nb <- bind_rows(
+  p_2025 %>% mutate(annee = 2025),
+  p_2024 %>% mutate(annee = 2024),
+  p_2023 %>% mutate(annee = 2023),
+  p_2022 %>% mutate(annee = 2022)
+) %>%
+  summarise(nb_stations = n_distinct(station), .by = annee) %>%
+  arrange(desc(annee))
+
+View(res_nb)
+```
+
+Je vais d'abord joindre tout les excels en un
+
+ATTENTION FICHIER TRÈS LOURD CAR PAS TRIER, si on veut réduire le temps
+on trie les fichiers avant
+
+```{r}
+# Conversion des types de données en "character" (seulement ce qui nous intéresse : station)
 p_2025$station <- as.character(p_2025$station)
 s_2025$code <- as.character(s_2025$code)
 
@@ -117,7 +131,7 @@ s_2023$code <- as.character(s_2023$code)
 p_2022$station <- as.character(p_2022$station)
 s_2022$code <- as.character(s_2022$code)
 
-# On vérifie que les 2 jeux sont en caractères
+# On vérifie que les 2 jeux sont en dataframe
 class(p_2025)
 class(s_2025)
 
@@ -180,11 +194,8 @@ str(data_all)
 table(data_all$annee)
 head(data_all)
 
-write.csv(
-  data_all,
-  "/Users/lorysdavid/Desktop/CNUM/data_all.csv",
-  row.names = FALSE
-)
+# J'enregistre
+# write.csv(data_all, "/Users/lorysdavid/Desktop/CNUM/data_all.csv", row.names = FALSE)
 ```
 
 Je veux filtrer dans mon tableau les molécules que je selectionne
@@ -198,17 +209,144 @@ data_all_select <- data_all %>%
   filter(libparam %in% molecules)
 
 # J'enregistre
-write.csv(
-  data_all_select,
-  "/Users/lorysdavid/Desktop/CNUM/Docs trier/data_all_select.csv",
-  row.names = FALSE
-)
+# write.csv(data_all_select, "/Users/lorysdavid/Desktop/CNUM/Docs trier/data_all_select.csv", row.names = FALSE)
+  
+# Je veux savoir combien j'ai de prélèvement par molécule et par année
+prelev_molécule_année <- data_all_select%>%
+  group_by(annee, libparam) %>%
+  summarise(nb_prelevements = n(), .groups = "drop")
+            
+View(prelev_molécule_année)
 ```
 
-Je sélectionne les colonnes qui m'interesse pour créer un autre excel en filtrant par station/molécule/année
+On regarde maintenant le nombre de stations de détection totales par
+année avec les molécules sélectionnées
 
 ```{r}
-moyennes_station_mol_annee <- data_all_sel %>%
+# Pour savoir combien il y a de station par an (molécules selectionnées)
+stat_nb <- data_all_select %>%
+  summarise(
+    nb_stations = n_distinct(station),
+    .by = annee
+  ) %>%
+  arrange(desc(annee))
+
+View(stat_nb)
+
+# On regarde aussi le nombre de station/molécule/an
+stat_nb1 <- data_all_select%>%
+  summarise(
+    nb_stations = n_distinct(station),
+    .by = c(annee, libparam)
+  ) %>%
+  arrange(libparam, annee)
+
+View(stat_nb1)
+
+
+
+
+# On regarde les stations distinctes par année, puis on compte combien de stations apparaissent les 4 ans
+stations_communes <- data_all_select %>%
+  distinct(station, annee) %>%
+  summarise(nb_annees = n_distinct(annee), .by = station) %>%
+  filter(nb_annees == 4)
+# savoir combien il y en a :
+nrow(stations_communes)
+# Voir toutes les stations
+View(stations_communes)
+
+# On regarde les stations distinctes par année, puis on compte combien de stations apparaissent sur au moins 3 ans
+stations_communes <- data_all_select%>%
+  distinct(station, annee) %>%
+  summarise(nb_annees = n_distinct(annee), .by = station) %>%
+  filter(nb_annees >= 3)
+# savoir combien il y en a :
+nrow(stations_communes)
+# Voir toutes les stations
+View(stations_communes)
+
+# On regarde les stations distinctes par année, puis on compte combien de stations apparaissent sur au moins 2 ans
+stations_communes <- data_all_select%>%
+  distinct(station, annee) %>%
+  summarise(nb_annees = n_distinct(annee), .by = station) %>%
+  filter(nb_annees >= 2)
+# savoir combien il y en a :
+nrow(stations_communes)
+# Voir toutes les stations
+View(stations_communes)
+
+# On regarde les stations distinctes par année, puis on compte combien de stations apparaissent sur au moins 1 an
+stations_communes <- data_all_select%>%
+  distinct(station, annee) %>%
+  summarise(nb_annees = n_distinct(annee), .by = station) %>%
+  filter(nb_annees >= 1)
+# Savoir combien il y en a :
+nrow(stations_communes)
+# Voir toutes les stations
+View(stations_communes)
+```
+
+Je filtre les résultats au dessus de la limite de détection
+
+```{r}
+data_code1 <- data_all_select %>%
+  filter(remarque == '1')
+
+View(data_code1)
+
+# Combien il y a de donnée dépassant la limite de détection
+nrow(data_code1)
+# 931 donnée
+
+# Combien il y a de données de chaque molécules
+nb_prelev_molecule <- data_code1 %>%
+  distinct(libparam, num_prel) %>%   # évite de compter 2 fois le même prélèvement
+  count(libparam, name = "nb_prelevements") %>%
+  arrange(desc(nb_prelevements))
+nb_prelev_molecule
+```
+
+Je veux maintenant avoir le nombre de prélèvement/station/molécule/an
+
+```{r}
+# Nombre de prélèvement/station/molécule/an
+nb_prelev_station_an_mol <- data_code1 %>%
+  distinct(annee, station, libparam, num_prel) %>%
+  summarise(
+    nb_prelev = n(),
+    .by = c(annee, station, libparam)
+  )
+
+View(nb_prelev_station_an_mol)
+
+# Nombre de station de détection en évitant les doublons
+stations_detection <- data_code1 %>%
+  distinct(libparam, station) %>%          # enlève doublons station/molécule
+  count(libparam, name = "nb_stations") %>%
+  arrange(desc(nb_stations))
+
+stations_detection
+
+stations_detection_an <- data_code1 %>%
+  distinct(annee, libparam, station) %>%    # enlève doublons
+  count(annee, libparam, name = "nb_stations") %>%
+  arrange(libparam, annee)
+stations_detection_an <- stations_detection_an %>%
+  pivot_wider(
+    names_from = annee,
+    values_from = nb_stations,
+    values_fill = 0
+  )
+
+View(stations_detection_an)
+```
+
+Je sélectionne les colonnes qui m'interesse pour créer un autre excel en
+filtrant par station/molécule/année
+
+```{r}
+moyennes_station_mol_annee <- data_code1 %>%
   group_by(annee, station, libparam, libelle, x, y) %>%
   summarise(
     concentration_moyenne = mean(resultat, na.rm = TRUE),
@@ -222,17 +360,15 @@ head(moyennes_station_mol_annee)
 table(moyennes_station_mol_annee$annee)
 
 # J'enregistre
-write.csv(
-  moyennes_station_mol_annee,
-  "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_mol_annee.csv",
-  row.names = FALSE
-)
+write.csv(moyennes_station_mol_annee, "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_mol_annee.csv", row.names = FALSE)
 ```
 
-Je fais maintenant une moyenne par molécules par stations de toute les années en même temps
+Je fais maintenant une moyenne par molécules par stations de toute les
+années en même temps
 
 ```{r}
-moyennes_station_molecule_all <- data_all_sel %>%
+# J'utilise n_mesures pour savoir combien de valeurs ont été utilisées pour faire la moyenne
+moyennes_station_molecule_all <- data_code1 %>%
   group_by(station, libparam, libelle, x, y) %>%
   summarise(
     concentration_moyenne = mean(resultat, na.rm = TRUE),
@@ -241,12 +377,168 @@ moyennes_station_molecule_all <- data_all_sel %>%
   )
 View(moyennes_station_molecule_all)
 
+# Je fais la moyenne du nombre de mesures qui sont utilisées 
+mean(moyennes_station_molecule_all$n_mesures)
+# On utilise en moyenne 3,36 prélèvement pour faire une moyenne par station/molécule
+
+# Tableau pour voir la distribution du nombre de prélèvements utilisés pour calculer les moyennes
+table_n_mesures <- moyennes_station_molecule_all %>%
+  count(n_mesures, name = "nb_moyennes") %>%
+  arrange(n_mesures)
+
+View(table_n_mesures)
+
 # J'enregistre
-write.csv(
-  moyennes_station_molecule_all,
-  "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_molecule_all.csv",
-  row.names = FALSE
-)
+write.csv(moyennes_station_molecule_all, "/Users/lorysdavid/Desktop/CNUM/Docs trier/moyennes_station_molecule_all.csv", row.names = FALSE)
 ```
 
-Les données ont été traitées selon deux niveaux : un jeu de données conservant l’ensemble des informations de prélèvement (dates, stations, molécules) et un jeu de données agrégé, issu du calcul de moyennes pluriannuelles par station et par molécule. Cette approche permet à la fois une analyse détaillée et une représentation cartographique synthétique des niveaux de contamination.
+Les données ont été traitées selon deux niveaux : un jeu de données
+conservant l’ensemble des informations de prélèvement (dates, stations,
+molécules) et un jeu de données agrégé, issu du calcul de moyennes
+pluriannuelles par station et par molécule. Cette approche permet à la
+fois une analyse détaillée et une représentation cartographique
+synthétique des niveaux de contamination.
+
+Pour la partie QGIS et l'interaction j'ai besoin de créer un tableau
+juste avec les stations (la je prend en compte toute les stations)
+
+```{r}
+coord_station <- moyennes_station_molecule_all %>%
+  select(station, x, y)
+
+# On supprime les doublons
+coord_station <- coord_station %>%
+  distinct()
+
+# J'enregistre
+# write.csv(coord_station, "/Users/lorysdavid/Desktop/CNUM/Docs trier/coord_station.csv", row.names = FALSE)
+```
+
+JE VEUX MAINTENANT TOUT BIEN PRÉPARER POUR QGIS
+
+```{r}
+# Je crais une variable de détection
+# Si la remarque est 1 alors le vrai résultat est dans la colonne 'resultat'
+# Si la remarque est 10 alors on remplace par NA
+data_clean <- data_all_select %>%
+  mutate(
+    detecte = remarque == 1,
+    sous_ld = remarque == 10,
+    resultat_detec = if_else(detecte, resultat, NA_real_)
+  )
+View(data_clean)
+
+# je crais de nouvelles colonnes
+stats_station_mol <- data_clean %>%
+  group_by(station, libparam) %>%
+  summarise(
+    nb_detection = sum(remarque == 1, na.rm = TRUE),   # nb de détections
+    nb_sous_ld   = sum(remarque == 10, na.rm = TRUE),  # nb de prelev sous LD
+    nb_prelev    = n_distinct(num_prel),               # nb de prelevement en tous
+
+    moyenne = ifelse(
+      nb_detection > 0,
+      mean(resultat[remarque == 1], na.rm = TRUE),
+      NA_real_
+    ),                                          # calcul des moyennes pour les prelev > LD
+
+    min = ifelse(
+      nb_detection > 0,
+      min(resultat[remarque == 1], na.rm = TRUE),
+      NA_real_
+    ),                                          # calcul des min pour les prelev > LD
+
+    max = ifelse(
+      nb_detection > 0,
+      max(resultat[remarque == 1], na.rm = TRUE),
+      NA_real_
+    ),                                          # calcul des max pour les prelev > LD
+
+    .groups = "drop"
+  )
+View(stats_station_mol)
+
+# On concatène les valeurs multiples 
+collapse_unique <- function(x, sep = " | ") {
+  x <- unique(na.omit(x))
+  if (length(x) == 0) NA_character_ else paste(x, collapse = sep)
+}
+
+# Je groupes toutes les infos stations 
+station_info <- data_clean %>%
+  group_by(station) %>%
+  summarise(
+    lib          = first(na.omit(lib)),
+    x            = first(na.omit(x)),
+    y            = first(na.omit(y)),
+    altitude     = first(na.omit(altitude)),
+    insee        = first(na.omit(insee)),
+    commune      = first(na.omit(commune)),
+    libelle      = first(na.omit(libelle)),
+    localisation = first(na.omit(localisation)),
+
+    # concaténation des valeurs multiples
+    code_reseau  = collapse_unique(code_reseau),
+    nom_reseau   = collapse_unique(nom_reseau),
+
+    code_cours_eau = collapse_unique(code_cours_eau),
+    toponyme       = collapse_unique(toponyme),
+    eu_cd          = collapse_unique(eu_cd),
+    typologie      = collapse_unique(typologie),
+
+    # Ajouts demandés
+    code_preleveur    = collapse_unique(code_preleveur),
+    nom_preleveur     = collapse_unique(nom_preleveur),
+    code_laboratoire  = collapse_unique(code_laboratoire),
+    nom_laboratoire   = collapse_unique(nom_laboratoire),
+    durete            = collapse_unique(durete),
+
+    .groups = "drop"
+  )
+
+# Je groupe toutes les infos molécules (1 ligne par station + molécule)
+mol_info <- data_clean %>%
+  group_by(station, libparam) %>%
+  summarise(
+    codeparam = collapse_unique(codeparam),
+    unite     = collapse_unique(unite),
+    libunite  = collapse_unique(libunite),
+    .groups = "drop"
+  )
+
+# Je regroupe tout dans un seul tableau (1 ligne = station + molécule)
+data_final <- stats_station_mol %>%
+  left_join(station_info, by = "station") %>%
+  left_join(mol_info, by = c("station", "libparam")) %>%
+  select(
+    station, lib, libelle, commune, insee, localisation,
+    x, y, altitude,
+
+    code_reseau, nom_reseau,
+    code_preleveur, nom_preleveur,
+    code_laboratoire, nom_laboratoire,
+
+    code_cours_eau, toponyme, eu_cd, typologie, durete,
+
+    codeparam, libparam, unite, libunite,
+
+    nb_detection, nb_sous_ld, nb_prelev,
+    moyenne, min, max
+  )
+
+View(data_final)
+
+# J'enregistre
+# write.csv(data_final, "/Users/lorysdavid/Desktop/CNUM/Docs trier/data_final.csv", row.names = FALSE)
+```
+
+Je vais créer le fichier OSO (en tiff) seulement pour Adour Garonne, ce
+sera moins lourd
+
+```{}
+```
+
+Réunir les 2 jeux de données qui nous intéresse en 1
+
+```{}
+```
