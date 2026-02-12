@@ -1,0 +1,207 @@
+---
+title: "Jointure_molecule_gobio"
+author: "Lorys David"
+date: "2026-02-11"
+output: pdf_document
+---
+
+Je fais un premier code avec seulement les stations en commun ou les poissons et les molécules ont été mesurées
+
+```{r}
+# Charger les 2 jeux de données
+data_final <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Carto/Stations_molecules/data_final.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+
+gobio_station <- read.csv(
+  "/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Carto/Stations_Gobio/gobio_station.csv",
+  header = TRUE,
+  stringsAsFactors = TRUE,
+  sep = ";"
+)
+
+# Clés de jointure (on garde les colonnes d'origine, on ajoute juste une clé)
+data_final <- data_final %>%
+  mutate(station_key = trimws(as.character(station)))
+
+gobio_station <- gobio_station %>%
+  mutate(station_key = trimws(as.character(CdStationMesureEauxSurface)))
+
+# COMBIEN DE STATIONS EN COMMUN ?
+stations_communes <- intersect(
+  unique(data_final$station_key),
+  unique(gobio_station$station_key)
+)
+
+nb_stations_communes <- length(stations_communes)
+message("Nombre de stations en commun : ", nb_stations_communes)
+
+# Garder uniquement les stations communes + joindre SANS dédupliquer data_final
+df_join <- data_final %>%
+  semi_join(gobio_station %>% select(station_key), by = "station_key") %>%
+  left_join(gobio_station, by = "station_key", suffix = c("_df", "_poisson")) %>%
+  mutate(type_ligne = "data_final")
+
+# Construire 1 ligne "poisson" par station
+# on veut: colonnes poissons remplies, colonnes data_final en NA
+data_cols    <- names(data_final)                 # inclut station + station_key + le reste
+poisson_cols <- names(gobio_station)              # inclut CdStation... + station_key + le reste
+
+poisson_rows <- gobio_station %>%
+  mutate(type_ligne = "poisson")
+
+# ajouter toutes les colonnes de data_final (sauf station_key déjà présent) en NA
+for (c in setdiff(data_cols, names(poisson_rows))) {
+  poisson_rows[[c]] <- NA
+}
+
+# Harmoniser les colonnes et empiler
+all_cols <- union(names(df_join), names(poisson_rows))
+
+df_join      <- df_join      %>% select(all_of(all_cols))
+poisson_rows <- poisson_rows %>% select(all_of(all_cols))
+
+result <- bind_rows(df_join, poisson_rows)
+
+# Nettoyage des colonnes "doublons" (cas fréquent : station/clé)
+# On garde:
+# - station (celle de data_final)
+# - CdStationMesureEauxSurface (celle de gobio_station)
+# - station_key (clé technique)
+# Si jamais join a créé station_df / station_poisson, on privilégie station_df.
+
+if ("station_df" %in% names(result)) {
+  result <- result %>%
+    mutate(station = coalesce(station, station_df)) %>%
+    select(-station_df)
+}
+if ("station_poisson" %in% names(result)) {
+  # on la supprime (elle redonde généralement avec CdStationMesureEauxSurface)
+  result <- result %>% select(-station_poisson)
+}
+
+# (optionnel) si CdStationMesureEauxSurface existe mais a été suffixée
+if ("CdStationMesureEauxSurface_poisson" %in% names(result) && !"CdStationMesureEauxSurface" %in% names(result)) {
+  result <- result %>%
+    rename(CdStationMesureEauxSurface = CdStationMesureEauxSurface_poisson)
+}
+
+# Ordonner : pour chaque station, d'abord les 4 lignes data_final, puis la ligne poisson
+result <- result %>%
+  arrange(station_key, factor(type_ligne, levels = c("data_final", "poisson")))
+
+# J'enlève les colonnes qui sont en double
+result <- result %>%
+  select(
+    -any_of(c(
+      "station_key",
+      "CdStationMesureEauxSurface",
+      "LbStationMesureEauxSurface",
+      "CoordXStationMesureEauxSurface",
+      "CoordYStationMesureEauxSurface",
+      "CodeCommune",
+      "LbCommune",
+      "CodeDepartement",
+      "LbDepartement",
+      "CodeRegion",
+      "LbRegion"
+    ))
+  )
+
+View(result)
+
+# J'enregistre
+# write.csv(result, "/Users/lorysdavid/Desktop/CNUM/Docs trier/station_molecule_poisson.csv", row.names = FALSE)
+```
+
+Un nouveau csv avec toutes les données réunies dans 1 excel avec toutes les stations avec et sans des prélèvement de poissons
+
+```{r}
+library(dplyr)
+
+# --- clés ---
+data_final <- data_final %>%
+  mutate(station_key = trimws(as.character(station)))
+
+gobio_station <- gobio_station %>%
+  mutate(station_key = trimws(as.character(CdStationMesureEauxSurface))) %>%
+  distinct(station_key, .keep_all = TRUE)  # 1 ligne poisson max par station
+
+# --- stats stations ---
+stations_df   <- unique(data_final$station_key)
+stations_fish <- unique(gobio_station$station_key)
+
+stations_communes <- intersect(stations_df, stations_fish)
+stations_sans_poisson <- setdiff(stations_df, stations_fish)
+
+message("Nb stations dans data_final : ", length(stations_df))
+message("Nb stations avec poissons (gobio_station) : ", length(stations_fish))
+message("Nb stations en commun : ", length(stations_communes))
+message("Nb stations SANS poissons (dans data_final) : ", length(stations_sans_poisson))
+
+# --- 1) Garder TOUTES les stations de data_final + ajouter colonnes poissons quand dispo ---
+df_join <- data_final %>%
+  left_join(gobio_station, by = "station_key", suffix = c("_df", "_poisson")) %>%
+  mutate(type_ligne = "data_final")
+
+# --- 2) Ajouter 1 ligne "poisson" uniquement pour les stations qui ont des poissons ---
+data_cols <- names(data_final)
+
+poisson_rows <- gobio_station %>%
+  mutate(type_ligne = "poisson")
+
+# ajouter colonnes data_final manquantes en NA (pour pouvoir bind_rows)
+for (c in setdiff(data_cols, names(poisson_rows))) {
+  poisson_rows[[c]] <- NA
+}
+
+# --- 3) Harmoniser colonnes et empiler ---
+all_cols <- union(names(df_join), names(poisson_rows))
+df_join <- df_join %>% select(all_of(all_cols))
+poisson_rows <- poisson_rows %>% select(all_of(all_cols))
+
+result <- bind_rows(df_join, poisson_rows)
+
+# --- 4) Nettoyage colonnes doublons éventuels ---
+if ("station_df" %in% names(result)) {
+  result <- result %>%
+    mutate(station = coalesce(station, station_df)) %>%
+    select(-station_df)
+}
+if ("station_poisson" %in% names(result)) {
+  result <- result %>% select(-station_poisson)
+}
+if ("CdStationMesureEauxSurface_poisson" %in% names(result) &&
+    !"CdStationMesureEauxSurface" %in% names(result)) {
+  result <- result %>% rename(CdStationMesureEauxSurface = CdStationMesureEauxSurface_poisson)
+}
+
+# --- 5) Ordonner : par station, data_final puis poisson (quand présent) ---
+result <- result %>%
+  arrange(station_key, factor(type_ligne, levels = c("data_final", "poisson")))
+
+# --- 6) Enlever les colonnes que tu ne veux pas ---
+result <- result %>%
+  select(
+    -any_of(c(
+      "station_key",
+      "CdStationMesureEauxSurface",
+      "LbStationMesureEauxSurface",
+      "CoordXStationMesureEauxSurface",
+      "CoordYStationMesureEauxSurface",
+      "CodeCommune",
+      "LbCommune",
+      "CodeDepartement",
+      "LbDepartement",
+      "CodeRegion",
+      "LbRegion"
+    ))
+  )
+
+View(result)
+
+write.csv(result, "/Users/lorysdavid/Desktop/Ecotoxicologie_CNUM/Carto/Stations_molecules_gobio/station_all_molecule_poisson.csv", row.names = FALSE)
+```
