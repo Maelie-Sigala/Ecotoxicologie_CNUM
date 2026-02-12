@@ -1,0 +1,50 @@
+---
+title: "Traitement couche CES OSO"
+author: "Lorys David"
+date: "2026-02-11"
+output: pdf_document
+---
+
+Je vais créer le fichier OSO (en tiff) seulement pour Adour Garonne, ce sera moins lourd
+
+```{r}
+library(terra)
+
+# Importer les données
+oso <- rast("/Users/lorysdavid/Desktop/CNUM/Ecotoxicologie_CNUM/Carto/OSO/old/Classif_Seed_0_2021.tif")
+
+# Voir si ça marche
+plot(oso)
+
+# Lire les bassin hydro de France
+library(sf)
+
+bassin <- st_read("/Users/lorysdavid/Desktop/CNUM/Carto/bassins hydrographiques/BassinHydrographique_FXX.shp")
+
+plot(bassin)
+
+# Je regarde les noms des valeurs
+bassin
+
+# Je garde uniquement Adour-Garonne
+adour <- bassin[bassin$LbBH == "Adour-Garonne", ]
+plot(adour)
+
+# J'exporte ce bassin pour QGIS et pour le réutiliser ensuite
+# st_write(adour, "/Users/lorysdavid/Desktop/CNUM/Carto/bassins hydrographiques/Adour-garonne/bassin_adour_garonne.shp", delete_dsn = TRUE)
+
+# Je regroupe le raster
+bassin_vect <- vect(adour)
+
+oso_crop <- crop(oso, bassin_vect)
+oso_crop <- mask(oso_crop, bassin_vect)
+
+plot(oso_crop)
+
+# J'enregistre ce raster pour ensuite l'exporter sur QGIS
+# writeRaster(oso_crop, "/Users/lorysdavid/Desktop/CNUM/Carto/bassins hydrographiques/OSO_crop.tif", overwrite = TRUE)
+
+# On vérifie bien si l'OSO est en Lambert-93
+crs(oso)
+st_crs(adour)
+```
